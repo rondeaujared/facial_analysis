@@ -1,7 +1,6 @@
-This repository is home to several research problems relevant to the field of facial analysis. 
-Motivation and overview of the problems we try to solve with this code can be found on Jared Rondeau's Research Blog (https://jaredrondeau.com/2018/08/30/age-estimation/).
-New users should check out the Issues tab and make requests for additional documentation under the "Documentation" issue.
-If you have questions, don't hesitate to ask them in the Slack channel or contribute to the Wiki in this repo. 
+This repository is home to several research problems relevant to the field of facial analysis. Motivation and overview of the problems we try to solve with this code can be found on Jared Rondeau's Research Blog (https://jaredrondeau.com/2018/08/30/age-estimation/).  
+New users should check out the Issues tab and make requests for additional documentation under the "Documentation" issue. If you have questions, don't hesitate to ask them in the Slack channel or contribute to the Wiki in this repo.  
+
 At the moment, I don't have a good way for sharing the datasets associated with the dataloaders in the source code. 
 For now, use the links below:
 
