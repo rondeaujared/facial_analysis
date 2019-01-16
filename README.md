@@ -11,14 +11,14 @@ For now, use the links below:
 
 If you find this code useful, please cite our conference paper with the following bibtex:
 
-@INPROCEEDINGS{8489570, 
-author={J. Rondeau and M. Alvarez}, 
-booktitle={2018 International Joint Conference on Neural Networks (IJCNN)}, 
-title={Deep Modeling of Human Age Guesses for Apparent Age Estimation}, 
-year={2018}, 
-volume={}, 
-number={}, 
-pages={01-08}, 
-doi={10.1109/IJCNN.2018.8489570}, 
-ISSN={2161-4407}, 
-month={July},}
+@INPROCEEDINGS{8489570,  
+author={J. Rondeau and M. Alvarez},  
+booktitle={2018 International Joint Conference on Neural Networks (IJCNN)},  
+title={Deep Modeling of Human Age Guesses for Apparent Age Estimation},  
+year={2018},  
+volume={},  
+number={},  
+pages={01-08},  
+doi={10.1109/IJCNN.2018.8489570},  
+ISSN={2161-4407},  
+month={July},}  
