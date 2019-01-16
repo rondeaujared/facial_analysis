@@ -19,7 +19,6 @@ year={2018},
 volume={}, 
 number={}, 
 pages={01-08}, 
-keywords={face recognition;feature extraction;feedforward neural nets;learning (artificial intelligence);APPA-Real;facial age;human labelers;per-image label distributions;KL-divergence loss function;label distributions;convolutional neural networks;mean absolute error;face images;apparent age estimation problem;unique deep learning formulation;human age guesses;deep modeling;dataset;Estimation;Training;Task analysis;Face;Feature extraction;Machine learning}, 
 doi={10.1109/IJCNN.2018.8489570}, 
 ISSN={2161-4407}, 
 month={July},}
