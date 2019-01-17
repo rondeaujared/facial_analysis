@@ -1,67 +1,18 @@
 import glob
 import pickle
-
 import os
 import torch
-from engine.age_estimation.age_estimation_train.datasets.eval_directory import EvalDirectory
-from engine.age_estimation.age_estimation_train.models.AuxilliaryAgeNet import AuxAgeNet
-from engine.age_estimation.age_estimation_train.training.evaluation import pred_dir
-from engine.age_estimation.age_estimation_train.training.preprocessing import get_transformations
-from engine.age_estimation.age_estimation_train.training.utils import setup_custom_logger
-from engine.face_detection.sfd.test import find_faces
+
+from face_detection.sfd.src.utils import EvalDirectory
+from age_estimation_train.models.AuxilliaryAgeNet import AuxAgeNet
+from age_estimation_train.training.evaluation import pred_dir
+from age_estimation_train.training.preprocessing import get_transformations
+from age_estimation_train.training.utils import setup_custom_logger
+from face_detection.sfd.src.test import find_faces_fast
 from icrawler.builtin import (FlickrImageCrawler, GoogleImageCrawler)
 
 root = '/mnt/fastdata/datasets/age-crawler/'
 logger = setup_custom_logger('child_crawler', 'child_crawler')
-
-"""
-@TODO: idk if this will be neccesary to multi-thread
-
-def process(path, batch_size=128):
-    logger.debug("Processing path: %s, valid: %s" % (path, os.path.isdir(path)))
-    # Shared resources for our threads, do not reassign these
-    todo = []
-
-    # Synchronization Objects
-    out_of_frames = Event()
-    faces_ready = Event()
-
-    # Don't forget to change based on len(threads) + 1
-    shared_frames_ready = Barrier(4, timeout=120)
-    finished_processing = Barrier(4, timeout=120)
-
-    # Initialize Threads
-    threads = [
-        Thread(
-            target=ages_thread, name="AG_Processing",
-            kwargs=dict(
-                shared_frames=shared_frames, faces_ready=faces_ready,
-                frames_ready=shared_frames_ready, finished_barrier=finished_processing,
-                is_done=out_of_frames
-            )
-        )
-    ]
-
-    [thread.start() for thread in threads]
-    logger.debug("Started threads")
-
-    for frame_batch in load(path, batch_size=batch_size):
-        shared_frames.clear()
-        shared_frames.extend(frame_batch)
-        shared_frames_ready.wait()
-        logger.debug('Shared frames extended.')
-
-        finished_processing.wait()
-        logger.debug('Cycle complete.')
-    else:
-        out_of_frames.set()
-        shared_frames.clear()
-        shared_frames_ready.wait()
-        logger.debug('Load Complete.')
-
-    [thread.join() for thread in threads]
-    logger.debug("Joined threads")
-"""
 
 
 def google_crawler(terms, filter, offset=0):
@@ -80,8 +31,8 @@ def flickr_crawler(terms):
         crawler.crawl(max_num=1000, tags=tag, tag_mode='all')
 
 
-def get_faces(path, gpu=0):
-    faces = find_faces(path, logger, device_ids=gpu)
+def get_faces(path):
+    faces = find_faces_fast(path, logger)
     pfaces = []
     for face in faces:
         pfaces.append(face[0])
@@ -89,23 +40,9 @@ def get_faces(path, gpu=0):
 
 
 def get_all(path):
-    images = {'.jpg': True, '.png': True, '.jpeg': True}
-    todo = [path]
-    all = []
-    while todo:
-        curr = todo.pop()
-        os.chdir(curr)
-        for c in os.listdir(curr):
-            t = os.path.join(curr, c)
-            if os.path.isdir(t):
-                todo.append(t)
-
-        for file in glob.glob("*.jpg") + glob.glob("*.png"):
-            keep = images.get(file[file.find('.'):], False)
-            if not keep:
-                continue
-            p = os.path.join(curr, file)
-            all.append(p)
+    toglob = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG']
+    hits = glob.glob(path + '**', recursive=True)
+    all = [x for x in hits if x[x.rfind('.'):] in toglob]
     return all
 
 
@@ -125,8 +62,8 @@ def crawl(terms):
     flickr_crawler(terms)
 
 
-def detect_faces(dir, gpu):
-    faces_pfaces = get_faces(dir, gpu)
+def detect_faces(dir):
+    faces_pfaces = get_faces(dir)
     pickle.dump(faces_pfaces, open(dir + "faces.pickle", "wb"))
     all = get_all(dir)
     pickle.dump(all, open(dir + "all.pickle", "wb"))
@@ -158,7 +95,7 @@ def get_ages(dir, fname):
     data = EvalDirectory(dir, trans[1], cache=d[0])
     data = DataLoader(data, batch_size=512, pin_memory=True, shuffle=False, num_workers=24)
     model = AuxAgeNet(**_MODEL_PARAMS)
-    model = torch.nn.DataParallel(model)  # If training on subset of GPUs use: device_ids=[0, 1, 2, 3])
+    model = torch.nn.DataParallel(model)
     model = model.to(DEVICE)
 
     buffer = pred_dir(model, data, keep=1)
@@ -184,22 +121,9 @@ if __name__ == '__main__':
     base = '/mnt/fastdata/datasets/age-crawler/google/'
     todo = list(map(lambda x: base + x.replace(' ', '_') + '/', terms))
 
-    import threading
-    start_nthreads = len(threading.enumerate())
-    while todo:
-        threads = []
-        for i in range(4):
-            if todo:
-                t = todo.pop()
-                threads.append(threading.Thread(target=detect_faces, name="face_detect", kwargs=dict(dir=t, gpu=i)))
+    for term in todo:
+        detect_faces(dir=term)
 
-        [thread.start() for thread in threads]
-        print(threading.enumerate())
-        nthreads = len(threading.enumerate()) - start_nthreads
-        print(f"nthreads: {nthreads}")
-        [thread.join() for thread in threads]
-
-    print(f"Past Pool")
     for term in terms:
         dir = base + term.replace(' ', '_') + '/'
         prune_faceless(dir)

@@ -16,8 +16,7 @@ toglob = set(['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'])
 MIN_SCORE = 0.90
 
 
-def find_faces_fast(root, display=False):
-    logger = LOGGER
+def find_faces_fast(root, logger=LOGGER, display=False):
     net = getattr(net_s3fd, 's3fd')()
     net.load_state_dict(torch.load(weights))
     net = torch.nn.DataParallel(net)
