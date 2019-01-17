@@ -1,7 +1,7 @@
 import torch.utils.data as data
 from torchvision.datasets.folder import default_loader
 
-from face_detection.sfd.test import find_faces
+from face_detection.sfd.src.test import find_faces
 from settings import *
 from ..training.preprocessing import ImdbTransformer
 

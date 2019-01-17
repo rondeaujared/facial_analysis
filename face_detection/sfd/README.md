@@ -1,3 +1,9 @@
+Sourced from https://github.com/clcarwin/SFD_pytorch
+
+# Note: to use cython without special C libraries, we can just call pyximport
+# See https://cython.readthedocs.io/en/latest/src/tutorial/cython_tutorial.html
+
+
 # S³FD: Single Shot Scale-invariant Face Detector
 A PyTorch Implementation of Single Shot Scale-invariant Face Detector.
 
