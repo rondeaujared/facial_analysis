@@ -11,7 +11,7 @@ from .utils import catch_stdin
 
 class ModelTrainer:
 
-    def __init__(self, model, image_loss, video_loss, scheduler, writer=None, save_path=None):
+    def __init__(self, model, image_loss, video_loss, scheduler, writer=None, save_path=None, validator=None):
         self.frames_per_vid = FRAMES_PER_VID
         self.logger = logging.getLogger(LOG_NAME)
         self.writer = writer
@@ -22,7 +22,7 @@ class ModelTrainer:
         self.video_loss = video_loss
         self.scheduler = scheduler
         self.optimizer = scheduler.optimizer
-
+        self.validator = validator
         self.video_iter = None
 
     def fit(self, train, validate, aux=None, epochs=1, save=True, use_vid_loss=lambda s, e: True):
@@ -30,7 +30,7 @@ class ModelTrainer:
         model.train()
 
         self.video_iter = cycle(aux) if aux else None
-        high_score = 100
+        high_score = 0
         step = 0
 
         for epoch in range(1, epochs + 1):
@@ -77,15 +77,31 @@ class ModelTrainer:
             # Finish loop
             tr_loss = tr_loss / count
             self.logger.info(f"Finished Epoch {epoch} with tr_loss {tr_loss}")
-            if validate is not None:
+
+            if self.validator is not None:
+                score = self.validator.validate(self.model)
+                preds = {'tp': score['tp'], 'fp': score['fp'], 'tn': score['tn'], 'fn': score['fn']}
+                stats = {'acc': score['acc'], 'f1': score['f1'], 'prec': score['prec'], 'rec': score['rec']}
+
+                if save and score['f1'] > high_score:
+                    torch.save(model.state_dict(), self.save_path)
+                    high_score = score['f1']
+                elif save:
+                    torch.save(model.state_dict(), self.save_path + 'recent')
+
+                self.writer.add_scalars('preds', preds, epoch)
+                self.writer.add_scalars('stats', stats, epoch)
+                self.writer.add_scalar('val_loss', score['loss'], epoch)
+            elif validate is not None:
                 score_adience(model, self.writer, self.image_loss, tag=str(epoch))
                 score_appa_real(model, self.writer, self.image_loss, tag=str(epoch))
                 if epoch % 1 == 0:  # Every 5 _EPOCHS get plots to visualize distributions
                     to_log = 16
                 else:
                     to_log = 0
-
+                
                 score, val_loss = self.score(validate, to_log=to_log, fold='val', epoch=epoch)
+
                 self.logger.info(f"VAL Epoch {epoch} MAE - {score:.3f}")
                 self.writer.add_scalars('train/loss',
                                         {'val_image_loss': val_loss}, step)
@@ -95,7 +111,7 @@ class ModelTrainer:
                 elif save:
                     torch.save(model.state_dict(), self.save_path + 'recent')
 
-            if epoch % 100 == 0:  # Every 5 _EPOCHS, check MAE on train
+            if epoch % 1000 == 0:  # Every 5 _EPOCHS, check MAE on train
                 score, train_loss = self.score(train, to_log=32, fold='train', epoch=epoch)
                 self.logger.info(f"TRAIN Epoch {epoch} MAE - {score:.3f}")
                 self.writer.add_scalars('train/loss',

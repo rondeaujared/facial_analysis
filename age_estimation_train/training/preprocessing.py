@@ -6,16 +6,17 @@ class ImdbTransformer(object):
     def __init__(self, transform):
         self.transforms = transform
 
-    def __call__(self, img, face=None):
+    def __call__(self, img, face=None, crop=True):
         # deltas = np.round((np.random.rand(4) - 0.5) * 20).astype(int)
         # m = max(img.size[0]*MARGIN, img.size[1]*MARGIN)
-        margin = 0.3  # np.random.rand()*0.4+0.1
-        m = max((face['x2']-face['x1']) * margin, (face['y2'] - face['y1']) * margin)
-        img = img.crop((face['x1']-m,
-                        face['y1']-m,
-                        face['x2']+m,
-                        face['y2']+m))
 
+        if crop:
+            margin = 0.3  # np.random.rand()*0.4+0.1
+            m = max((face['x2']-face['x1']) * margin, (face['y2'] - face['y1']) * margin)
+            img = img.crop((face['x1']-m,
+                            face['y1']-m,
+                            face['x2']+m,
+                            face['y2']+m))
         img = self.transforms(img)
         return img
 

@@ -1,5 +1,5 @@
 from torch.utils.data import ConcatDataset, random_split
-
+from face_detection.sfd.src.utils import EvalDirectory
 from .adience import *
 from .appa_real import *
 from .imdb import *
@@ -7,6 +7,12 @@ from .imdb import *
 
 def get_train(n, transform):
     todo = []
+
+    t = n.get('dir', 0)
+    txt = n.get('txt', [])
+    if t is None or t > 0:
+        tr_dir = EvalDirectory(root=n['root_dir'], txt=txt, labels=True)
+        todo.append(tr_dir)
 
     t = n.get('appa_real', 0)
     if t is None or t > 0:
@@ -28,6 +34,12 @@ def get_train(n, transform):
 
 def get_validation(n, transform, to_split=None):
     todo = []
+
+    t = n.get('dir', 0)
+    txt = n.get('txt', [])
+    if t is None or t > 0:
+        val_dir = EvalDirectory(root=n['root_dir'], txt=txt, labels=True)
+        todo.append(val_dir)
 
     t = n.get('appa_real', 0)
     if t is None or t > 0:
@@ -53,6 +65,12 @@ def get_validation(n, transform, to_split=None):
 def get_test(n, transform):
     todo = []
 
+    t = n.get('dir', 0)
+    txt = n.get('txt', [])
+    if t is None or t > 0:
+        ts_dir = EvalDirectory(root=n['root_dir'], txt=txt, labels=True)
+        todo.append(ts_dir)
+
     t = n.get('appa_real', 0)
     if t is None or t > 0:
         appa_ts = AppaRealDataset(subset='test/', transform=transform, n=t, ext='', crop_faces=True)
@@ -65,4 +83,3 @@ def get_test(n, transform):
 
     ts = ConcatDataset(todo)
     return ts
-

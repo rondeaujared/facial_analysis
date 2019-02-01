@@ -57,14 +57,14 @@ class s3fd(nn.Module):
         self.conv3_3_norm_mbox_loc  = nn.Conv2d(256, 4, kernel_size=3, stride=1, padding=1)
         self.conv4_3_norm_mbox_conf = nn.Conv2d(512, 2, kernel_size=3, stride=1, padding=1)
         self.conv4_3_norm_mbox_loc  = nn.Conv2d(512, 4, kernel_size=3, stride=1, padding=1)
-        self.conv5_3_norm_mbox_conf = nn.Conv2d(512, 2, kernel_size=3, stride=1, padding=1)
+        self.conv5_3_norm_mbox_conf = nn.Conv2d(512, 2, kernel_size=3, stride=1, padding=1)  ##
         self.conv5_3_norm_mbox_loc  = nn.Conv2d(512, 4, kernel_size=3, stride=1, padding=1)
 
-        self.fc7_mbox_conf     = nn.Conv2d(1024, 2, kernel_size=3, stride=1, padding=1)
+        self.fc7_mbox_conf     = nn.Conv2d(1024, 2, kernel_size=3, stride=1, padding=1)      ##
         self.fc7_mbox_loc      = nn.Conv2d(1024, 4, kernel_size=3, stride=1, padding=1)
-        self.conv6_2_mbox_conf = nn.Conv2d(512, 2, kernel_size=3, stride=1, padding=1)
+        self.conv6_2_mbox_conf = nn.Conv2d(512, 2, kernel_size=3, stride=1, padding=1)       ##
         self.conv6_2_mbox_loc  = nn.Conv2d(512, 4, kernel_size=3, stride=1, padding=1)
-        self.conv7_2_mbox_conf = nn.Conv2d(256, 2, kernel_size=3, stride=1, padding=1)
+        self.conv7_2_mbox_conf = nn.Conv2d(256, 2, kernel_size=3, stride=1, padding=1)       ##
         self.conv7_2_mbox_loc  = nn.Conv2d(256, 4, kernel_size=3, stride=1, padding=1)
 
     def forward(self, x):
@@ -78,25 +78,31 @@ class s3fd(nn.Module):
 
         h = F.relu(self.conv3_1(h))
         h = F.relu(self.conv3_2(h))
-        h = F.relu(self.conv3_3(h)); f3_3 = h
+        h = F.relu(self.conv3_3(h))
+        f3_3 = h
         h = F.max_pool2d(h, 2, 2)
 
         h = F.relu(self.conv4_1(h))
         h = F.relu(self.conv4_2(h))
-        h = F.relu(self.conv4_3(h)); f4_3 = h
+        h = F.relu(self.conv4_3(h))
+        f4_3 = h
         h = F.max_pool2d(h, 2, 2)
 
         h = F.relu(self.conv5_1(h))
         h = F.relu(self.conv5_2(h))
-        h = F.relu(self.conv5_3(h)); f5_3 = h
+        h = F.relu(self.conv5_3(h))
+        f5_3 = h
         h = F.max_pool2d(h, 2, 2)
 
         h = F.relu(self.fc6(h))
-        h = F.relu(self.fc7(h));     ffc7 = h
+        h = F.relu(self.fc7(h))
+        ffc7 = h
         h = F.relu(self.conv6_1(h))
-        h = F.relu(self.conv6_2(h)); f6_2 = h
+        h = F.relu(self.conv6_2(h))
+        f6_2 = h
         h = F.relu(self.conv7_1(h))
-        h = F.relu(self.conv7_2(h)); f7_2 = h
+        h = F.relu(self.conv7_2(h))
+        f7_2 = h
 
         f3_3 = self.conv3_3_norm(f3_3)
         f4_3 = self.conv4_3_norm(f4_3)

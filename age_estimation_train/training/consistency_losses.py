@@ -16,6 +16,12 @@ def get_current_consistency_weight(epoch, consistency_rampup=1):
         return float(np.exp(-5.0 * phase * phase))
 
 
+def child_adult_loss(model_out, gt):
+    padult = model_out[-1]
+    lf = NLLLoss(reduction='mean')
+    return lf(padult, gt)
+
+
 def child_adience_ldl_loss(model_out, gt):
     dist, minor, adience = model_out
     ldl, minor_gt, adience_gt = gt

@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats
 import torch
+import cv2
 from sklearn.neighbors.kde import KernelDensity
 
 
@@ -106,3 +107,57 @@ def get_age_to_group():
         atg[i] = 7
 
     return atg
+
+
+def image_resize(image, width=None, height=None, big_side=640, inter=cv2.INTER_AREA):
+    # initialize the dimensions of the image to be resized and
+    # grab the image size
+    dim = None
+    (h, w) = image.shape[:2]
+
+    # if both the width and height are None, then return the
+    # original image
+    if width is None and height is None:
+        if max(h, w) < big_side:
+            hpad = big_side - h
+            wpad = big_side - w
+            p = np.random.rand()
+            if p > 0.50:
+                image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad,
+                                           borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+            else:
+                image = cv2.copyMakeBorder(image, left=wpad, top=hpad, bottom=0, right=0,
+                                           borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+            return image
+        if h > w:
+            height = big_side
+        else:
+            width = big_side
+
+    # check to see if the width is None
+    if width is None:
+        # calculate the ratio of the height and construct the
+        # dimensions
+        r = height / float(h)
+        dim = (int(w * r), height)
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    image = cv2.resize(image, dim, interpolation=inter)
+    (h, w) = image.shape[:2]
+    if width is None: # Height was big side
+        wpad = big_side - w
+        hpad = 0
+    else:
+        wpad = 0
+        hpad = big_side - h
+
+    p = np.random.rand()
+    if p > 0.50:
+        image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad,
+                                   borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    else:
+        image = cv2.copyMakeBorder(image, left=wpad, top=hpad, bottom=0, right=0,
+                                   borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    return image

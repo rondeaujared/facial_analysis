@@ -8,6 +8,69 @@ from .utils import get_label
 from ..datasets.data_utils import *
 
 
+class Evaluator:
+    def __init__(self, dataset, writer, image_loss):
+        self.dataset = dataset
+        self.writer = writer
+        self.logger = logging.getLogger(LOG_NAME)
+        self.image_loss = image_loss
+
+    def validate(self, model):
+        model.eval()
+
+        # Adult is class 1
+        tp = 0  # Adults called adults
+        tn = 0  # Children called children
+        fp = 0  # Children called adults
+        fn = 0  # Adults called children
+        eps = 1e-8
+        score = {}
+        loss = 0
+        loss_count = 0
+        num = 0
+        with torch.no_grad():
+            for inputs, labels in self.dataset:
+                inputs = inputs.to(DEVICE)
+                gt = get_label(self.image_loss, labels)
+                adults = labels['adult'].cpu().numpy().astype('bool')
+                out = model.forward(inputs)
+                debug = np.around(torch.exp(out[-1]).cpu().numpy()[:, 1], 3)
+                debug = debug[debug < 0.05]
+                num += len(debug)
+                self.logger.info(f"{debug}")
+                outputs = torch.exp(out[-1]).argmax(dim=1).to(torch.uint8).cpu().numpy().astype('bool')
+                loss += self.image_loss(out, gt)
+                tp += len(adults[(adults == 1) & (outputs == 1)])
+                tn += len(adults[(adults == 0) & (outputs == 0)])
+                fp += len(adults[(adults == 0) & (outputs == 1)])
+                fn += len(adults[(adults == 1) & (outputs == 0)])
+                loss_count += 1
+            self.logger.info(f"Num of interest: {num}")
+            loss /= max(loss_count, 1)
+            acc = (tp + tn) / (tp + tn + fp + fn + eps)
+            precision = tp / (tp + fp + eps)
+            recall = tp / (tp + fn + eps)
+            f1 = 2 * precision * recall / (precision + recall + eps)
+            self.logger.info(f"{'TP':4}|{'FP':4}")
+            self.logger.info(f"{'FN':4}|{'TN':4}")
+            self.logger.info(f"{tp:4}|{fp:4}")
+            self.logger.info(f"{fn:4}|{tn:4}")
+            self.logger.info(f"Acc \t{acc:.3f}")
+            self.logger.info(f"Prec\t{precision:.3f}")
+            self.logger.info(f"Rec \t{recall:.3f}")
+            self.logger.info(f"F1  \t{f1:.3f}")
+            score['acc'] = acc
+            score['tp'] = tp
+            score['fp'] = fp
+            score['tn'] = tn
+            score['fn'] = fn
+            score['prec'] = precision
+            score['rec'] = recall
+            score['f1'] = f1
+            score['loss'] = loss
+        return score
+
+
 def score_adience(model, writer, image_loss, subset='val', tag=''):
     logger = logging.getLogger(LOG_NAME)
     logger.info(f"Evaluating on Adience " + subset)

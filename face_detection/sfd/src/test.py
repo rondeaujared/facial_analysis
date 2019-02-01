@@ -9,6 +9,7 @@ from scipy import misc
 from torch.utils.data.dataloader import DataLoader
 from face_detection.sfd.src.detect import *
 from face_detection.sfd.models import net_s3fd
+from face_detection.sfd.models import s3fd_features
 from .utils import LOGGER, image_resize, EvalDirectory, DEVICE
 
 weights = '/home/research/jrondeau/research/risp-prototype/engine/face_detection/sfd/data/s3fd_convert.pth'
@@ -17,19 +18,23 @@ MIN_SCORE = 0.90
 
 
 def find_faces_fast(root, logger=LOGGER, display=False):
-    net = getattr(net_s3fd, 's3fd')()
-    net.load_state_dict(torch.load(weights))
+    #net = getattr(net_s3fd, 's3fd')()
+    net = getattr(s3fd_features, 's3fd_features')()
+    net.load_weights(weights)
+    #net.load_state_dict(torch.load(weights))
     net = torch.nn.DataParallel(net)
     net = net.to(DEVICE)
     net.eval()
     dataset = EvalDirectory(root)
-    dataset = DataLoader(dataset, batch_size=64, pin_memory=True, shuffle=False, num_workers=0)
+    dataset = DataLoader(dataset, batch_size=1, pin_memory=True, shuffle=False, num_workers=0)
     faces = []
     output = os.getcwd() + '/data/'
 
     with torch.no_grad():
         for image, paths in dataset:
-            olist = net(image)
+            output = net(image)
+            olist = output[:-1]
+            activations = output[-1]
             bboxlist = detect_fast(olist)
             for ix in range(bboxlist.shape[1]):
                 curr = bboxlist[:, ix, :]

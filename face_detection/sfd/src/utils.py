@@ -6,25 +6,100 @@ import torch
 import glob
 import torch.utils.data as data
 import os
+import torchvision.transforms as tran
 
-LOG_NAME = 'find_faces'
+#LOG_NAME = 'find_faces'
+LOG_NAME = 'age_train'
 FILE_NAME = 'find_faces.log'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class EvalDirectory(data.Dataset):
 
-    def __init__(self, root):
-        self.root = root
+    def __init__(self, root, txt=None, labels=False):
+        #self.root = root
         self.logger = logging.getLogger(LOG_NAME)
+        self.use_labels = labels
         self.images = []
-        toglob = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG']
-        hits = glob.glob(root + '**', recursive=True)
-        self.images = [x for x in hits if x[x.rfind('.'):] in toglob]
+        self.labels = {}
+        self.transformer = tran.Compose([
+            tran.ToPILImage(),
+            #tran.RandomHorizontalFlip(),
+            #tran.Resize(662),
+            #tran.RandomCrop(640),
+            tran.ToTensor(),
+        ])
+        print(root)
+        for dir in root:
+            self.logger.info(f"Loading dir {dir}...")
+            self._use_dir(dir)
+
+        for f in txt:
+            if 'child' in f:
+                self._use_text(f, 0)
+            elif 'adult' in f:
+                self._use_text(f, 1)
+
+    def _use_dir(self, path, l=None):
+        ugh = [f'.~{x}~' for x in range(10)]
+        toglob = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'] + ugh
+        hits = glob.glob(path + '**', recursive=True)
+        images = [x for x in hits if x[x.rfind('.'):] in toglob]
+        self.images.extend(images)
+        self.logger.info(f"{len(images)} images added from {path}")
+        if self.use_labels:
+            for img in images:
+                label = {
+                    'label': np.random.rand((101)),
+                    'app_age': float(-1),
+                    'path': img,
+                    'real_age': float(-1),
+                    'group': -1,
+                    'adult': -1,
+                }
+
+                if l:
+                    label['adult'] = l
+                elif 'child' in img:
+                    label['adult'] = 0
+                elif 'adult' in img:
+                    label['adult'] = 1
+                elif 'nsfw' in img:
+                    label['adult'] = 1
+                elif 'redlight' in img:
+                    label['adult'] = 1
+                elif 'minors' in img:
+                    label['adult'] = 0
+                else:
+                    self.logger.warning(f"Labels enabled but no label found for image {img}")
+                self.labels[img] = label
+
+    def _use_text(self, path, l):
+        f = open(path, "r")
+        lines = list(map(lambda x: x.replace('\n', ''), f.readlines()))
+        for p in lines:
+            label = {
+                'label': np.random.rand((101)),
+                'app_age': float(-1),
+                'path': p,
+                'real_age': float(-1),
+                'group': -1,
+                'adult': -1,
+            }
+
+            p = p.replace('imdb', 'imdb/')
+            label['path'] = p
+            label['adult'] = l
+
+            self.images.append(p)
+            self.labels[p] = label
+        f.close()
 
     def __getitem__(self, index):
         path = self.images[index]
         img = cv2.imread(path)
+        if img is None:
+            self.logger.warning(f"Image opened as none! {path}")
         img = image_resize(img)
         if img is None or img.shape[0] > 4000 or img.shape[1] > 4000:
             self.logger.warning(f"Image too large: {img.shape}; ignoring")
@@ -32,12 +107,19 @@ class EvalDirectory(data.Dataset):
 
         try:
             img = img - np.array([104, 117, 123])
+            p = np.random.rand()
+            if p > 0.50:
+                img = cv2.flip(img, flipCode=1)
             img = img.transpose(2, 0, 1)
-            img = torch.from_numpy(img).to(dtype=torch.float)
+            img = torch.as_tensor(img, dtype=torch.float)
         except Exception as e:
             self.logger.warning(f"Failed to detect image {path}; with error {e}.")
 
-        return img, path
+        if self.use_labels:
+            label = self.labels[path]
+            return img, label
+        else:
+            return img, path
 
     def __len__(self):
         return len(self.images)
@@ -55,8 +137,13 @@ def image_resize(image, width=None, height=None, big_side=640, inter=cv2.INTER_A
         if max(h, w) < big_side:
             hpad = big_side - h
             wpad = big_side - w
-            image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad,
-                                       borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+            p = np.random.rand()
+            if p > 0.50:
+                image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad,
+                                           borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+            else:
+                image = cv2.copyMakeBorder(image, left=wpad, top=hpad, bottom=0, right=0,
+                                           borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
             return image
         if h > w:
             height = big_side
@@ -81,7 +168,14 @@ def image_resize(image, width=None, height=None, big_side=640, inter=cv2.INTER_A
     else:
         wpad = 0
         hpad = big_side - h
-    image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad, borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+
+    p = np.random.rand()
+    if p > 0.50:
+        image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad,
+                                   borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    else:
+        image = cv2.copyMakeBorder(image, left=wpad, top=hpad, bottom=0, right=0,
+                                   borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
     return image
 
 
@@ -103,4 +197,5 @@ def setup_custom_logger(name=LOG_NAME, file_name=FILE_NAME, level='DEBUG'):
     return logger
 
 
-LOGGER = setup_custom_logger()
+#LOGGER = setup_custom_logger()
+LOGGER = logging.getLogger(LOG_NAME)

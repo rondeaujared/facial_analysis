@@ -20,6 +20,8 @@ def get_label(image_loss, labels):
         gt = labels['label'].to(DEVICE, dtype=torch.float32), \
              labels['adult'].to(DEVICE, dtype=torch.long), \
              labels['group'].to(DEVICE, dtype=torch.long)
+    elif image_loss.__name__ == child_adult_loss.__name__:
+        gt = labels['adult'].to(DEVICE, dtype=torch.long)
     else:
         raise Exception(f"Invalid criterion: {image_loss.__name__}")
     return gt

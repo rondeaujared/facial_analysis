@@ -12,7 +12,7 @@ from .training.preprocessing import get_transformations
 from .training.consistency_trainer import ModelTrainer
 from .datasets.video_faces import VideoFacesDataset
 from .datasets.data_utils import get_train, get_validation, get_test
-from .training.evaluation import score_adience
+from .training.evaluation import score_adience, Evaluator
 
 
 def launch_all():
@@ -127,8 +127,9 @@ def run_experiment(to_pickle, param_str, model, scheduler, image_loss, video_los
     else:
         vids_loader = None
 
+    validator = Evaluator(dataset=val, writer=writer, image_loss = image_loss)
     # Start Experiments
-    trainer = ModelTrainer(model, image_loss, video_loss, scheduler, writer=writer, save_path=save_path)
+    trainer = ModelTrainer(model, image_loss, video_loss, scheduler, writer=writer, save_path=save_path, validator=validator)
 
     if initial_eval:
         init_mae, init_loss = trainer.score(val, to_log=10, epoch=0)
@@ -139,10 +140,10 @@ def run_experiment(to_pickle, param_str, model, scheduler, image_loss, video_los
     if epochs > 0:
         trainer.fit(tr, val, vids_loader, epochs=epochs, use_vid_loss=use_vid_loss, save=save_model)
 
-    score_adience(model, writer, image_loss, subset='test')
+    # score_adience(model, writer, image_loss, subset='test')
 
-    final_mae, final_loss = trainer.score(ts, fold='test', epoch=epochs+1)
-    logger.info(f"TEST MAE: {final_mae:.3f}")
+    # final_mae, final_loss = trainer.score(ts, fold='test', epoch=epochs+1)
+    # logger.info(f"TEST MAE: {final_mae:.3f}")
 
     writer.export_scalars_to_json("./runs/all_scalars.json")
     writer.close()  # Close tensorboard writer

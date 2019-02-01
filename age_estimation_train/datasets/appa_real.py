@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 import scipy.io
 import torch.utils.data as data
+import cv2
+import torch
+
 from torchvision.datasets.folder import default_loader
 
 from . import utils
@@ -66,6 +69,8 @@ class AppaRealDataset(data.Dataset):
         bio_age = {}
         images = []
         atg = utils.get_age_to_group()
+        c_child = 0
+        c_adult = 0
 
         for row in self.csv.itertuples():
             picks[row[1]] = picks.get(row[1], []) + [row[3]]
@@ -98,9 +103,14 @@ class AppaRealDataset(data.Dataset):
                 if crop_faces:
                     self.faces.append(face)
                 i += 1
+                if target['adult']:
+                    c_adult += 1
+                else:
+                    c_child += 1
             else:
                 self.logger.debug(f"{target} was filtered")
 
+        self.logger.info(f"Loaded {(c_child+c_adult)} images from APPA-REAL; {c_child} children and {c_adult} adults.")
         self.images = images
 
     def __getitem__(self, index):
@@ -111,13 +121,33 @@ class AppaRealDataset(data.Dataset):
             tuple: (image, target) where target is index of the target class.
         """
         path, target = self.images[index]
+
+        img = cv2.imread(path)
+        if img is None:
+            self.logger.warning(f"Image opened as none! {path}")
+        img = utils.image_resize(img)
+        if img is None or img.shape[0] > 4000 or img.shape[1] > 4000:
+            self.logger.warning(f"Image too large: {img.shape}; ignoring")
+            return np.zeros((1, 5))
+
+        try:
+            img = img - np.array([104, 117, 123])
+            p = np.random.rand()
+            if p > 0.50:
+                img = cv2.flip(img, flipCode=1)
+            img = img.transpose(2, 0, 1)
+            img = torch.as_tensor(img, dtype=torch.float)
+        except Exception as e:
+            self.logger.warning(f"Failed to detect image {path}; with error {e}.")
+
+        '''
         img = self.loader(path)
         if self.crop_faces:
             face = self.faces[index]
             img = self.transform(img, face)
         else:
             img = self.transform(img)
-
+        '''
         if self.target_transform is not None:
             target = self.target_transform(target)
 
