@@ -16,7 +16,7 @@ def get_train(n, transform):
 
     t = n.get('appa_real', 0)
     if t is None or t > 0:
-        appa_tr = AppaRealDataset(subset='train/', transform=transform, n=t, ext='', crop_faces=True)
+        appa_tr = AppaRealDataset(subset='train/', transform=transform, n=t)#, ext='', crop_faces=True)
         todo.append(appa_tr)
 
     t = n.get('adience', 0)
@@ -43,7 +43,7 @@ def get_validation(n, transform, to_split=None):
 
     t = n.get('appa_real', 0)
     if t is None or t > 0:
-        appa_val = AppaRealDataset(subset='val/', transform=transform, n=t, ext='', crop_faces=True)
+        appa_val = AppaRealDataset(subset='val/', transform=transform, n=t)#, ext='', crop_faces=True)
         todo.append(appa_val)
 
     t = n.get('adience', 0)
@@ -73,7 +73,7 @@ def get_test(n, transform):
 
     t = n.get('appa_real', 0)
     if t is None or t > 0:
-        appa_ts = AppaRealDataset(subset='test/', transform=transform, n=t, ext='', crop_faces=True)
+        appa_ts = AppaRealDataset(subset='test/', transform=transform, n=t)#, ext='', crop_faces=True)
         todo.append(appa_ts)
 
     t = n.get('adience', 0)

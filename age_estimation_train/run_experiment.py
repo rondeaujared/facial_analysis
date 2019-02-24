@@ -104,21 +104,23 @@ def run_experiment(to_pickle, param_str, model, scheduler, image_loss, video_los
         tr = get_train(dataset_params['train'], trans[0])
         tr, val = get_validation(dataset_params['val'], trans[1], to_split=tr)
         ts = get_test(dataset_params['test'], trans[1])
+        '''
         with open('tr' + fname, 'wb') as f:
             pickle.dump(tr, f)
         with open('val' + fname, 'wb') as f:
             pickle.dump(val, f)
         with open('ts' + fname, 'wb') as f:
             pickle.dump(ts, f)
+        '''
     else:
         logger.info(f"Using existing training pickle at {fname}")
         tr = pickle.load(open('tr' + fname, "rb"))
         val = pickle.load(open('val' + fname, "rb"))
         ts = pickle.load(open('ts' + fname, "rb"))
 
-    tr = DataLoader(tr, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=24 if not debug else 0)
-    val = DataLoader(val, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=8 if not debug else 0)
-    ts = DataLoader(ts, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=8 if not debug else 0)
+    tr = DataLoader(tr, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=32 if not debug else 0)
+    val = DataLoader(val, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=16 if not debug else 0)
+    ts = DataLoader(ts, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=16 if not debug else 0)
 
     if dataset_params['video'] is None or dataset_params['video'] > 0:
         vids = VideoFacesDataset(transform=trans[0], batch_size=batch_size, subsample=dataset_params['video'])
@@ -127,9 +129,9 @@ def run_experiment(to_pickle, param_str, model, scheduler, image_loss, video_los
     else:
         vids_loader = None
 
-    validator = Evaluator(dataset=val, writer=writer, image_loss = image_loss)
+    #validator = Evaluator(dataset=val, writer=writer, image_loss = image_loss)
     # Start Experiments
-    trainer = ModelTrainer(model, image_loss, video_loss, scheduler, writer=writer, save_path=save_path, validator=validator)
+    trainer = ModelTrainer(model, image_loss, video_loss, scheduler, writer=writer, save_path=save_path)#, validator=validator)
 
     if initial_eval:
         init_mae, init_loss = trainer.score(val, to_log=10, epoch=0)

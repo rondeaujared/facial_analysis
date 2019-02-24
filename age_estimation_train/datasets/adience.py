@@ -8,7 +8,7 @@ from torchvision.datasets.folder import default_loader
 
 from settings import *
 from .utils import get_age_to_group, imdb_labeler, image_resize
-BASE_DIR = '/mnt/fastdata/datasets/adience/faces/'
+BASE_DIR = 'datasets/adience/faces/'
 
 
 class AdienceDataset(data.Dataset):
@@ -27,7 +27,8 @@ class AdienceDataset(data.Dataset):
         self.loader = default_loader
         self.logger = logging.getLogger(LOG_NAME)
 
-        fname = root + 'age_' + subset + '.txt'
+        fname = 'age_estimation_train/datasets/data_labels/adience/age_' + subset + '.txt'
+        #fname = root + 'age_' + subset + '.txt'
         adience = build_adience(fname, n)
         atg = get_age_to_group()
         c_child = 0
@@ -73,30 +74,13 @@ class AdienceDataset(data.Dataset):
         """
         path, target = self.images[index]
 
-        img = cv2.imread(path)
-        if img is None:
-            self.logger.warning(f"Image opened as none! {path}")
-        img = image_resize(img)
-        if img is None or img.shape[0] > 4000 or img.shape[1] > 4000:
-            self.logger.warning(f"Image too large: {img.shape}; ignoring")
-            return np.zeros((1, 5))
+        if hasattr(self.transform, 'S3FD'):
+            img = self.transform(path)
+        else:
+            img = self.loader(path)
+            if self.transform is not None:
+                img = self.transform(img)
 
-        try:
-            img = img - np.array([104, 117, 123])
-            p = np.random.rand()
-            if p > 0.50:
-                img = cv2.flip(img, flipCode=1)
-            img = img.transpose(2, 0, 1)
-            img = torch.as_tensor(img, dtype=torch.float)
-        except Exception as e:
-            self.logger.warning(f"Failed to detect image {path}; with error {e}.")
-
-        '''
-        img = self.loader(path)
-
-        if self.transform is not None:
-            img = self.transform(img)
-        '''
         if self.target_transform is not None:
             target = self.target_transform(target)
 

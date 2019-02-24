@@ -12,30 +12,34 @@ from face_detection.sfd.models import net_s3fd
 from face_detection.sfd.models import s3fd_features
 from .utils import LOGGER, image_resize, EvalDirectory, DEVICE
 
-weights = '/home/research/jrondeau/research/risp-prototype/engine/face_detection/sfd/data/s3fd_convert.pth'
+#weights = '/home/research/jrondeau/research/risp-prototype/engine/face_detection/sfd/data/s3fd_convert.pth'
+#weights = '/mnt/nfs/scratch1/jrondeau/models/s3fd_convert.pth'
+weights = 'face_detection/sfd/models/s3fd_convert.pth'
 toglob = set(['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'])
-MIN_SCORE = 0.90
+MIN_SCORE = 0.50
 
 
-def find_faces_fast(root, logger=LOGGER, display=False):
-    #net = getattr(net_s3fd, 's3fd')()
-    net = getattr(s3fd_features, 's3fd_features')()
+def find_faces_fast(root, logger=LOGGER, batch_size=1, display=False):
+    net = getattr(net_s3fd, 's3fd')()
+    #net = getattr(s3fd_features, 's3fd_features')()
     net.load_weights(weights)
     #net.load_state_dict(torch.load(weights))
     net = torch.nn.DataParallel(net)
     net = net.to(DEVICE)
     net.eval()
-    dataset = EvalDirectory(root)
-    dataset = DataLoader(dataset, batch_size=1, pin_memory=True, shuffle=False, num_workers=0)
+    dataset = EvalDirectory([root], [], static=True)
+    dataset = DataLoader(dataset, batch_size=batch_size, pin_memory=True, shuffle=False, num_workers=0)
     faces = []
-    output = os.getcwd() + '/data/'
+    display_dir = os.getcwd() + '/data/'
 
     with torch.no_grad():
         for image, paths in dataset:
             output = net(image)
-            olist = output[:-1]
+            olist = output  # output[:-1]
             activations = output[-1]
             bboxlist = detect_fast(olist)
+            if bboxlist is None:
+                continue
             for ix in range(bboxlist.shape[1]):
                 curr = bboxlist[:, ix, :]
                 path = paths[ix]
@@ -53,7 +57,7 @@ def find_faces_fast(root, logger=LOGGER, display=False):
                 if display:
                     print(f"Path: {path} typeof: {type(path)}")
                     img = cv2.imread(path)
-                    imgshow = image_resize(img)
+                    imgshow = image_resize(img, static=True)
                     for b in curr:
                         x1, y1, x2, y2, s = b
 
@@ -68,10 +72,10 @@ def find_faces_fast(root, logger=LOGGER, display=False):
                     except:
                         pass
                     out_path = path.replace(root, '')
-                    out_dir = output + out_path[:out_path.rfind('/')]
+                    out_dir = display_dir + out_path[:out_path.rfind('/')]
                     print(f"out dir: {out_dir}")
                     os.makedirs(out_dir, exist_ok=True)
-                    out_path = output + out_path + '_output.png'
+                    out_path = display_dir + out_path + '_output.png'
                     print(f"Saving to {out_path}")
                     cv2.imwrite(out_path, imgshow)
 

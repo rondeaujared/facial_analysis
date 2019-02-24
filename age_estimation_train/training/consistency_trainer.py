@@ -93,9 +93,9 @@ class ModelTrainer:
                 self.writer.add_scalars('stats', stats, epoch)
                 self.writer.add_scalar('val_loss', score['loss'], epoch)
             elif validate is not None:
-                score_adience(model, self.writer, self.image_loss, tag=str(epoch))
-                score_appa_real(model, self.writer, self.image_loss, tag=str(epoch))
-                if epoch % 1 == 0:  # Every 5 _EPOCHS get plots to visualize distributions
+                #score_adience(model, self.writer, self.image_loss, tag=str(epoch))
+                #score_appa_real(model, self.writer, self.image_loss, tag=str(epoch))
+                if epoch % 10 == 0:  # Every 5 _EPOCHS get plots to visualize distributions
                     to_log = 16
                 else:
                     to_log = 0

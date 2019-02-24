@@ -67,6 +67,9 @@ class s3fd(nn.Module):
         self.conv7_2_mbox_conf = nn.Conv2d(256, 2, kernel_size=3, stride=1, padding=1)       ##
         self.conv7_2_mbox_loc  = nn.Conv2d(256, 4, kernel_size=3, stride=1, padding=1)
 
+    def load_weights(self, weights):
+        self.load_state_dict(torch.load(weights))
+
     def forward(self, x):
         h = F.relu(self.conv1_1(x))
         h = F.relu(self.conv1_2(h))

@@ -5,6 +5,8 @@ import numpy as np
 import torch
 import glob
 import torch.utils.data as data
+from age_estimation_train.training.preprocessing import S3fdTransformer
+
 import os
 import torchvision.transforms as tran
 
@@ -16,20 +18,15 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class EvalDirectory(data.Dataset):
 
-    def __init__(self, root, txt=None, labels=False):
-        #self.root = root
+    def __init__(self, root, txt, labels=False, static=False):
         self.logger = logging.getLogger(LOG_NAME)
         self.use_labels = labels
         self.images = []
         self.labels = {}
-        self.transformer = tran.Compose([
-            tran.ToPILImage(),
-            #tran.RandomHorizontalFlip(),
-            #tran.Resize(662),
-            #tran.RandomCrop(640),
-            tran.ToTensor(),
-        ])
-        print(root)
+        self.static = static
+        self.transformer = S3fdTransformer(static)
+
+        self.logger.info(f"Root dir {root}")
         for dir in root:
             self.logger.info(f"Loading dir {dir}...")
             self._use_dir(dir)
@@ -97,23 +94,7 @@ class EvalDirectory(data.Dataset):
 
     def __getitem__(self, index):
         path = self.images[index]
-        img = cv2.imread(path)
-        if img is None:
-            self.logger.warning(f"Image opened as none! {path}")
-        img = image_resize(img)
-        if img is None or img.shape[0] > 4000 or img.shape[1] > 4000:
-            self.logger.warning(f"Image too large: {img.shape}; ignoring")
-            return np.zeros((1, 5))
-
-        try:
-            img = img - np.array([104, 117, 123])
-            p = np.random.rand()
-            if p > 0.50:
-                img = cv2.flip(img, flipCode=1)
-            img = img.transpose(2, 0, 1)
-            img = torch.as_tensor(img, dtype=torch.float)
-        except Exception as e:
-            self.logger.warning(f"Failed to detect image {path}; with error {e}.")
+        img = self.transformer(path)
 
         if self.use_labels:
             label = self.labels[path]
@@ -125,7 +106,7 @@ class EvalDirectory(data.Dataset):
         return len(self.images)
 
 
-def image_resize(image, width=None, height=None, big_side=640, inter=cv2.INTER_AREA):
+def image_resize(image, width=None, height=None, big_side=640, inter=cv2.INTER_AREA, static=False):
     # initialize the dimensions of the image to be resized and
     # grab the image size
     dim = None
@@ -138,7 +119,7 @@ def image_resize(image, width=None, height=None, big_side=640, inter=cv2.INTER_A
             hpad = big_side - h
             wpad = big_side - w
             p = np.random.rand()
-            if p > 0.50:
+            if p > 0.50 and not static:
                 image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad,
                                            borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
             else:
@@ -170,7 +151,7 @@ def image_resize(image, width=None, height=None, big_side=640, inter=cv2.INTER_A
         hpad = big_side - h
 
     p = np.random.rand()
-    if p > 0.50:
+    if p > 0.50 and not static:
         image = cv2.copyMakeBorder(image, left=0, top=0, bottom=hpad, right=wpad,
                                    borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
     else:

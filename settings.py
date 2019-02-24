@@ -6,8 +6,8 @@ import inspect
 import pickle
 import random
 import logging
-from age_estimation_train.training.consistency_losses import stacked_mean_loss, child_adience_ldl_loss, child_adult_loss
-from age_estimation_train.models import AuxilliaryAgeNet
+from age_estimation_train.training.consistency_losses import *
+from age_estimation_train.models import AuxilliaryAgeNet, AgeNet
 from face_detection.sfd.models import s3fd_features
 from PIL import ImageFile
 
@@ -15,10 +15,10 @@ cv2.setNumThreads(0)
 torch.backends.cudnn.bencmark = True
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-# MODEL = AuxilliaryAgeNet.AuxAgeNet
-MODEL = s3fd_features.s3fd_features
-#IMAGE_LOSS = child_adience_ldl_loss
-IMAGE_LOSS = child_adult_loss
+DATA_ROOT = os.getcwd() + '/datasets/'
+
+MODEL = AgeNet.AgeNet  #s3fd_features.s3fd_features
+IMAGE_LOSS = mean_ldl_loss
 
 CLASSES = torch.cuda.FloatTensor([range(0, 101)]).t()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -37,41 +37,41 @@ WEIGHTS = {
 }
 
 FRAMES_PER_VID = 8
-EPOCHS = 1
-BATCH_SIZE = 64
+EPOCHS = 100
+BATCH_SIZE = 256
 
-ADAM_PARAMS = {'lr': 0, #3e-4,
+ADAM_PARAMS = {'lr': 3e-4,
                'weight_decay': 1e-5, 'betas': (0.9, 0.999)}
 SGD_PARAMS = {'lr': 1e-3, 'weight_decay': 1e-5, 'momentum': 0.9, 'nesterov': True}
 MODEL_PARAMS = {
-    #'imagenet': True,
-    #'freeze_features': True,
-    'base_weights': WEIGHTS['s3fd'],
-    'aux_weights': WEIGHTS['s3fd_aux'],
+    'imagenet': True,
+    'freeze_features': False,
+    'base_weights': WEIGHTS['none'],
+    #'aux_weights': WEIGHTS['s3fd_aux'],
     'drop_rate': 0.20
 }
 
 SCHEDULER_PARAMS = {'factor': 0.50, 'patience': 5, 'threshold': 1e-2, 'verbose': True}
 DATASET_PARAMS = {
-    'train': {'appa_real': 0, 'adience': 128, 'imdb': 0, 'dir': 0,
-              'root_dir': [
-                          '/mnt/fastdata/datasets/age-crawler/organized_google2/child/',
-                          '/mnt/fastdata/datasets/age-crawler/labelled_flickr/',
-                          ],
+    'train': {'appa_real': None, 'adience': 0, 'imdb': 0, 'dir': 0,
+              'root_dir': [],
+              #            '/mnt/fastdata/datasets/age-crawler/organized_google2/child/',
+              #            '/mnt/fastdata/datasets/age-crawler/labelled_flickr/',
+              #            ],
               'txt': [],
               #'txt': ['/mnt/fastdata/datasets/imdb/imdb_adults.txt',
               #        '/mnt/fastdata/datasets/imdb/imdb_children.txt']
               },
 
-    'val': {'appa_real': 0, 'adience': 0, 'imdb': 0, 'ptrain': 1, 'dir': 1,
+    'val': {'appa_real': None, 'adience': 0, 'imdb': 0, 'ptrain': 1, 'dir': 0,
             #'root_dir': ['/mnt/data/playground/YouTubeFaces/YouTubeFaces/frame_images_DB/']
             #'root_dir': ['/mnt/data/playground/redlight/images/train/nsfw/']
             #'root_dir': ['/mnt/fastdata/datasets/redlight/redlight-images/SNF/']
-            #'root_dir': ['/mnt/data/playground/challenging-binary-age/child/']
-            'root_dir': ['/mnt/data/playground/youtube-minors/thumbnails/']
+            #'root_dir': ['datasets/challenging-binary-age/child/']
+            'root_dir': []
             },
 
-    'test': {'appa_real': 0, 'adience': 0, 'imdb': 0, 'dir': 1,
+    'test': {'appa_real': None, 'adience': 0, 'imdb': 0, 'dir': 0,
              'root_dir': ['/mnt/fastdata/datasets/age-crawler/labelled_flickr/']},
     'video': 0
 }

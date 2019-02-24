@@ -12,7 +12,7 @@ from ..training.preprocessing import ImdbTransformer
 
 MAX_AGE = 80
 MIN_AGE = 0
-BASE_DIR = '/mnt/fastdata/datasets/imdb/'
+BASE_DIR = 'datasets/imdb/'
 FNAME = BASE_DIR + 'imdb.mat'
 LOG_NAME = 'age_train'
 
@@ -80,31 +80,15 @@ class ImdbDataset(data.Dataset):
         """
         path, target = self.images[index]
 
-        img = cv2.imread(path)
-        if img is None:
-            self.logger.warning(f"Image opened as none! {path}")
-        img = utils.image_resize(img)
-        if img is None or img.shape[0] > 4000 or img.shape[1] > 4000:
-            self.logger.warning(f"Image too large: {img.shape}; ignoring")
-            return np.zeros((1, 5))
+        if hasattr(self.transform, 'S3FD'):
+            img = self.transform(path)
+        else:
+            face = self.faces[index]
+            img = self.loader(path)
 
-        try:
-            img = img - np.array([104, 117, 123])
-            p = np.random.rand()
-            if p > 0.50:
-                img = cv2.flip(img, flipCode=1)
-            img = img.transpose(2, 0, 1)
-            img = torch.as_tensor(img, dtype=torch.float)
-        except Exception as e:
-            self.logger.warning(f"Failed to detect image {path}; with error {e}.")
+            if self.transform is not None:
+                img = self.transform(img, face)
 
-        '''
-        face = self.faces[index]
-        img = self.loader(path)
-
-        if self.transform is not None:
-            img = self.transform(img, face)
-        '''
         if self.target_transform is not None:
             target = self.target_transform(target)
 

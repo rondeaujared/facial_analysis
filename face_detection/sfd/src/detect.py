@@ -3,7 +3,7 @@ from face_detection.sfd.src.bbox import *
 from .utils import LOGGER
 
 logger = LOGGER
-FILTER = 0.95
+FILTER = 0.50
 
 
 def detect_fast(olist):
@@ -20,22 +20,24 @@ def detect_fast(olist):
         for Iindex, hindex, windex in poss:
             axc, ayc = stride/2+windex*stride, stride/2+hindex*stride
             score = ocls[:, 1, hindex, windex]
+            loc = None
             loc = oreg[:, :, hindex, windex].contiguous().view(-1, 4)
 
             priors = torch.Tensor([[axc/1.0, ayc/1.0, stride*4/1.0, stride*4/1.0]])
             variances = [0.1, 0.2]
-
+            if loc is None:
+                continue
             box = decode(loc, priors, variances)
 
             bboxlist.append(torch.cat((box, score.view(-1, 1)), 1).numpy())
-        box = decode(loc, priors, variances)
+        #box = decode(loc, priors, variances)
 
-        bboxlist.append(torch.cat((box, score.view(-1, 1)), 1).numpy())
+        #bboxlist.append(torch.cat((box, score.view(-1, 1)), 1).numpy())
 
     bboxlist = np.array(bboxlist)
     if 0 == len(bboxlist):
         print(f"No faces deteted; not sure if this will work")
-        bboxlist = np.zeros((1, 5))
+        bboxlist = None  # np.zeros((1, 1, 5))
 
     """ @TODO: turn this method into gpu
         stride = torch.Tensor([2 ** (i + 2)]).to(torch.device('cuda'), dtype=torch.float)
