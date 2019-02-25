@@ -14,7 +14,7 @@ class ImdbTransformer(object):
         # m = max(img.size[0]*MARGIN, img.size[1]*MARGIN)
 
         if crop:
-            margin = 0.3  # np.random.rand()*0.4+0.1
+            margin = np.random.rand()*0.4+0.1
             m = max((face['x2']-face['x1']) * margin, (face['y2'] - face['y1']) * margin)
             img = img.crop((face['x1']-m,
                             face['y1']-m,

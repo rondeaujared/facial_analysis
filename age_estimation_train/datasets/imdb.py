@@ -12,7 +12,7 @@ from ..training.preprocessing import ImdbTransformer
 
 MAX_AGE = 80
 MIN_AGE = 0
-BASE_DIR = 'datasets/imdb/'
+BASE_DIR = 'datasets/imdb/imdb/'
 FNAME = BASE_DIR + 'imdb.mat'
 LOG_NAME = 'age_train'
 

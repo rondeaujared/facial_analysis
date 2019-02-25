@@ -37,10 +37,10 @@ WEIGHTS = {
 }
 
 FRAMES_PER_VID = 8
-EPOCHS = 100
+EPOCHS = 200
 BATCH_SIZE = 256
 
-ADAM_PARAMS = {'lr': 3e-4,
+ADAM_PARAMS = {'lr': 3e-5,
                'weight_decay': 1e-5, 'betas': (0.9, 0.999)}
 SGD_PARAMS = {'lr': 1e-3, 'weight_decay': 1e-5, 'momentum': 0.9, 'nesterov': True}
 MODEL_PARAMS = {
@@ -51,9 +51,9 @@ MODEL_PARAMS = {
     'drop_rate': 0.20
 }
 
-SCHEDULER_PARAMS = {'factor': 0.50, 'patience': 5, 'threshold': 1e-2, 'verbose': True}
+SCHEDULER_PARAMS = {'factor': 0.50, 'patience': 10, 'threshold': 1e-2, 'verbose': True}
 DATASET_PARAMS = {
-    'train': {'appa_real': None, 'adience': 0, 'imdb': 0, 'dir': 0,
+    'train': {'appa_real': 0, 'adience': 0, 'imdb': 100000, 'dir': 0,
               'root_dir': [],
               #            '/mnt/fastdata/datasets/age-crawler/organized_google2/child/',
               #            '/mnt/fastdata/datasets/age-crawler/labelled_flickr/',
@@ -63,7 +63,7 @@ DATASET_PARAMS = {
               #        '/mnt/fastdata/datasets/imdb/imdb_children.txt']
               },
 
-    'val': {'appa_real': None, 'adience': 0, 'imdb': 0, 'ptrain': 1, 'dir': 0,
+    'val': {'appa_real': 0, 'adience': 0, 'imdb': 128, 'ptrain': 0.95, 'dir': 0,
             #'root_dir': ['/mnt/data/playground/YouTubeFaces/YouTubeFaces/frame_images_DB/']
             #'root_dir': ['/mnt/data/playground/redlight/images/train/nsfw/']
             #'root_dir': ['/mnt/fastdata/datasets/redlight/redlight-images/SNF/']
@@ -71,7 +71,7 @@ DATASET_PARAMS = {
             'root_dir': []
             },
 
-    'test': {'appa_real': None, 'adience': 0, 'imdb': 0, 'dir': 0,
+    'test': {'appa_real': 0, 'adience': 128, 'imdb': 0, 'dir': 0,
              'root_dir': ['/mnt/fastdata/datasets/age-crawler/labelled_flickr/']},
     'video': 0
 }

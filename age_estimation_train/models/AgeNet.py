@@ -24,15 +24,14 @@ class AgeNet(DenseNet.DenseNet):
     def __init__(self, drop_rate=0, num_classes=101, imagenet=False,
                  freeze_features=False, base_weights='', **kwargs):
         # DenseNet-121
-        '''
         super().__init__(drop_rate=drop_rate, num_classes=1000,
                          num_init_features=64, growth_rate=32,
                          block_config=(6, 12, 24, 16), **kwargs)
-        '''
+
         # DenseNet-161
-        super().__init__(drop_rate=drop_rate, num_classes=1000,
-                         num_init_features=96, growth_rate=48,
-                         block_config=(6, 12, 36, 24), **kwargs)
+        #super().__init__(drop_rate=drop_rate, num_classes=1000,
+        #                 num_init_features=96, growth_rate=48,
+        #                 block_config=(6, 12, 36, 24), **kwargs)
         self.logger = logging.getLogger(settings.LOG_NAME)
 
         if imagenet:
@@ -71,8 +70,8 @@ class AgeNet(DenseNet.DenseNet):
         """
         exp = r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$'
         pattern = compile(exp)
-        state_dict = load_url('https://download.pytorch.org/models/densenet161-8d451a50.pth')
-        # state_dict = load_url('https://download.pytorch.org/models/densenet121-a639ec97.pth')
+        # state_dict = load_url('https://download.pytorch.org/models/densenet161-8d451a50.pth')
+        state_dict = load_url('https://download.pytorch.org/models/densenet121-a639ec97.pth')
         for key in list(state_dict.keys()):
             res = pattern.match(key)
             if res:

@@ -42,11 +42,11 @@ def mean_ldl_loss(model_out, gt):
     dist, age = gt
 
     kl = KLDivLoss(reduction='batchmean')
-    sml = SmoothL1Loss(reduction='mean')
+    #sml = SmoothL1Loss(reduction='mean')
 
-    ages = torch.matmul(torch.exp(model_out), settings.CLASSES).view(-1)
+    #ages = torch.matmul(torch.exp(model_out), settings.CLASSES).view(-1)
 
-    return kl(model_out, dist) + sml(ages, age)
+    return kl(model_out, dist) # + sml(ages, age)
 
 
 def stacked_ldl_loss(model_out, epoch, consistency_rampup):
