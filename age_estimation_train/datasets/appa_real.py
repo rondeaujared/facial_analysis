@@ -92,6 +92,7 @@ class AppaRealDataset(data.Dataset):
             target = {
                 'label': label,
                 'app_age': float(val.mean()),
+                'app_age_std': float(np.std(val)),
                 'path': path,
                 'real_age': float(bio_age[k]),
                 'group': group,

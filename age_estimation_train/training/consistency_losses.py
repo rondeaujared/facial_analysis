@@ -78,3 +78,9 @@ def stacked_mean_loss(model_out, epoch, consistency_rampup):
 
     w = get_current_consistency_weight(epoch, consistency_rampup=consistency_rampup)
     return base_vid_loss(video_ages, target) * w
+
+
+def gaussian_kl_divergence(model_out, gt):
+    mean, std = gt
+    # kl divergence from model_out to mean, std
+    pass

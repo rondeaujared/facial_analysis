@@ -18,7 +18,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 DATA_ROOT = os.getcwd() + '/datasets/'
 
 MODEL = AgeNet.AgeNet  #s3fd_features.s3fd_features
-IMAGE_LOSS = mean_ldl_loss
+IMAGE_LOSS = gaussian_kl_divergence
 
 CLASSES = torch.cuda.FloatTensor([range(0, 101)]).t()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -48,7 +48,8 @@ MODEL_PARAMS = {
     'freeze_features': False,
     'base_weights': WEIGHTS['none'],
     #'aux_weights': WEIGHTS['s3fd_aux'],
-    'drop_rate': 0.20
+    'drop_rate': 0.20,
+    'num_classes': 2,
 }
 
 SCHEDULER_PARAMS = {'factor': 0.50, 'patience': 10, 'threshold': 1e-2, 'verbose': True}
