@@ -95,7 +95,7 @@ class ModelTrainer:
             elif validate is not None:
                 #score_adience(model, self.writer, self.image_loss, tag=str(epoch))
                 #score_appa_real(model, self.writer, self.image_loss, tag=str(epoch))
-                if epoch % 10 == 0:  # Every 5 _EPOCHS get plots to visualize distributions
+                if epoch % 20 == 0:  # Every 5 _EPOCHS get plots to visualize distributions
                     to_log = 16
                 else:
                     to_log = 0
@@ -151,12 +151,15 @@ class ModelTrainer:
                 outputs = self.model.forward(inputs)
                 loss += self.image_loss(outputs, gt)
 
+                pred = outputs[:, 0]
+                '''
                 if isinstance(outputs, tuple):
                     dist = outputs[0]
                 else:
                     dist = outputs
 
                 pred = torch.matmul(torch.exp(dist), settings.CLASSES).view(-1)
+                '''
 
                 if to_log > 0:
                     if data.batch_size - to_log > 0:
