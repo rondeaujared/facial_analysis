@@ -22,7 +22,7 @@ def get_label(image_loss, labels):
              labels['group'].to(DEVICE, dtype=torch.long)
     elif image_loss.__name__ == child_adult_loss.__name__:
         gt = labels['adult'].to(DEVICE, dtype=torch.long)
-    elif isinstance(image_loss, gaussian_kl_divergence):
+    elif image_loss__name__ == gaussian_kl_divergence.__name__:
         gt = labels['app_age'].to(DEVICE, dtype=torch.long), \
             labels['app_age_std'].to(DEVICE, dtype=torch.long)
     else:

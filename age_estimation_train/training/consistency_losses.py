@@ -81,8 +81,9 @@ def stacked_mean_loss(model_out, epoch, consistency_rampup):
 
 
 def gaussian_kl_divergence(model_out, gt):
-    mean, std = gt
-    pmean, pstd = (model_out[:,0], model_out[:,1])
+    scale = torch.tensor(1 / 100)
+    mean, std = (scale * torch.maximum(x, torch.tensor(1e-8)) for x in gt)
+    pmean, pstd = (scale * model_out[:,0], scale * model_out[:,1])
     # kl divergence from ground truth to model's prediction
     term1 = torch.log(pstd / (1e-8 + std))
     term2 = (std.pow(2) + (mean - pmean).pow(2)) / (1e-8 + (2 * pstd.pow(2)))
