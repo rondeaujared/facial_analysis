@@ -46,7 +46,7 @@ def mean_ldl_loss(model_out, gt):
 
     #ages = torch.matmul(torch.exp(model_out), settings.CLASSES).view(-1)
 
-    return kl(model_out, dist) # + sml(ages, age)
+    return kl(model_out, dist)  # + sml(ages, age)
 
 
 def stacked_ldl_loss(model_out, epoch, consistency_rampup):
@@ -81,10 +81,15 @@ def stacked_mean_loss(model_out, epoch, consistency_rampup):
 
 
 def gaussian_kl_divergence(model_out, gt):
-    scale = torch.tensor(1 / 100)
+    # See https://stats.stackexchange.com/questions/7440/kl-divergence-between-two-univariate-gaussians
+    # for derivation
+    # scale = torch.tensor(1 / 100)
+    scale = torch.tensor(1)
     mean, std = (scale * torch.clamp(x, torch.tensor(1e-8)) for x in gt)
     pmean, pstd = (scale * model_out[:, 0], scale * model_out[:, 1])
-
+    print(mean, pmean)
+    print(std, pstd)
+    print("---")
     # kl divergence from ground truth to model's prediction
     term1 = torch.log(pstd / (1e-8 + std))
     term2 = (std.pow(2) + (mean - pmean).pow(2)) / (1e-8 + (2 * pstd.pow(2)))

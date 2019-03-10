@@ -58,9 +58,9 @@ class AgeNet(DenseNet.DenseNet):
         out = func.relu(features, inplace=True)
         out = func.avg_pool2d(out, kernel_size=7).view(features.size(0), -1)
         out = self.classifier(out)
-        out = func.softplus(out)
+        #out = func.softplus(out)
         # out = func.relu(out, inplace=False)
-        # out = func.log_softmax(out, dim=1)
+        out = func.log_softmax(out, dim=1)
         return out
     
     @staticmethod

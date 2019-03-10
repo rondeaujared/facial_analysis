@@ -64,7 +64,7 @@ class ModelTrainer:
                     loss = image_loss
                     video_loss = 0
 
-                if math.isnan(loss) or loss > 10000:
+                if math.isnan(loss) or loss > 100000:
                     self.logger.critical(f"Loss explosion {loss} -- aborting")
                     return
 
@@ -95,7 +95,7 @@ class ModelTrainer:
             elif validate is not None:
                 #score_adience(model, self.writer, self.image_loss, tag=str(epoch))
                 #score_appa_real(model, self.writer, self.image_loss, tag=str(epoch))
-                if epoch % 20 == 0:  # Every 5 _EPOCHS get plots to visualize distributions
+                if epoch % 200 == 0:  # Every 5 _EPOCHS get plots to visualize distributions
                     to_log = 16
                 else:
                     to_log = 0

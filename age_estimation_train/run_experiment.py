@@ -8,7 +8,7 @@ from torch.utils.data.dataloader import DataLoader
 
 from .training.consistency_losses import *
 from .training.utils import setup_custom_logger
-from .training.preprocessing import get_transformations
+from .training.preprocessing import get_transformations, S3fdTransformer
 from .training.consistency_trainer import ModelTrainer
 from .datasets.video_faces import VideoFacesDataset
 from .datasets.data_utils import get_train, get_validation, get_test
@@ -98,8 +98,8 @@ def run_experiment(to_pickle, param_str, model, scheduler, image_loss, video_los
     #####################
     # Setup dataloaders #
     #####################
-    trans = get_transformations()
-
+    #trans = get_transformations()
+    trans = (S3fdTransformer(static=False), S3fdTransformer(static=True))
     if repickle:
         tr = get_train(dataset_params['train'], trans[0])
         tr, val = get_validation(dataset_params['val'], trans[1], to_split=tr)
@@ -129,9 +129,9 @@ def run_experiment(to_pickle, param_str, model, scheduler, image_loss, video_los
     else:
         vids_loader = None
 
-    #validator = Evaluator(dataset=val, writer=writer, image_loss = image_loss)
+    validator = Evaluator(dataset=val, writer=writer, image_loss = image_loss)
     # Start Experiments
-    trainer = ModelTrainer(model, image_loss, video_loss, scheduler, writer=writer, save_path=save_path)#, validator=validator)
+    trainer = ModelTrainer(model, image_loss, video_loss, scheduler, writer=writer, save_path=save_path, validator=validator)
 
     if initial_eval:
         init_mae, init_loss = trainer.score(val, to_log=10, epoch=0)

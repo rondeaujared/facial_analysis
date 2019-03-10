@@ -37,7 +37,7 @@ class Evaluator:
                 debug = np.around(torch.exp(out[-1]).cpu().numpy()[:, 1], 3)
                 debug = debug[debug < 0.05]
                 num += len(debug)
-                self.logger.info(f"{debug}")
+                #self.logger.info(f"{debug}")
                 outputs = torch.exp(out[-1]).argmax(dim=1).to(torch.uint8).cpu().numpy().astype('bool')
                 loss += self.image_loss(out, gt)
                 tp += len(adults[(adults == 1) & (outputs == 1)])

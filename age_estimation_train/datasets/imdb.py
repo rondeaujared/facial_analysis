@@ -11,7 +11,7 @@ from . import utils
 from ..training.preprocessing import ImdbTransformer
 
 MAX_AGE = 80
-MIN_AGE = 0
+MIN_AGE = 16
 BASE_DIR = 'datasets/imdb/imdb/'
 FNAME = BASE_DIR + 'imdb.mat'
 LOG_NAME = 'age_train'
@@ -25,12 +25,12 @@ class ImdbDataset(data.Dataset):
             return
 
         self.root = root
-        self.transform = ImdbTransformer(transform)
+        self.transform = transform # ImdbTransformer(transform)
         self.target_transform = target_transform
         self.loader = default_loader
         self.logger = logging.getLogger(LOG_NAME)
 
-        imdb = build_imdb(n)
+        imdb = build_imdb(n, all_faces=True)
         images = []
         faces = []
         atg = utils.get_age_to_group()
@@ -98,7 +98,7 @@ class ImdbDataset(data.Dataset):
         return len(self.images)
 
 
-def build_imdb(n=None):
+def build_imdb(n=None, all_faces=False):
     mat = scipy.io.loadmat(FNAME)
     data = mat['imdb']
     ndata = {n: data[n][0, 0][0] for n in data.dtype.names}
@@ -116,7 +116,9 @@ def build_imdb(n=None):
     df['age'] = (df['date_taken'] - df['bday']) / timedelta(days=365)
 
     # Get rows with exactly 1 face
-    df = df[df['second_face_score'].isna()]
+    if not all_faces:
+        df = df[df['second_face_score'].isna()]
+
     df = df[df['face_score'] > 0]
     df = df[(df.age >= MIN_AGE) & (df.age <= MAX_AGE)]
     df = df.drop(columns=['celeb_id', 'dob', 'name', 'second_face_score'])

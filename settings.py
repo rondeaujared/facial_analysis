@@ -11,14 +11,16 @@ from age_estimation_train.models import AuxilliaryAgeNet, AgeNet
 from face_detection.sfd.models import s3fd_features
 from PIL import ImageFile
 
-cv2.setNumThreads(0)
+cv2.setNumThreads(20)
 torch.backends.cudnn.bencmark = True
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DATA_ROOT = os.getcwd() + '/datasets/'
 
-MODEL = AgeNet.AgeNet  #s3fd_features.s3fd_features
-IMAGE_LOSS = gaussian_kl_divergence
+#MODEL = AgeNet.AgeNet
+MODEL = s3fd_features.s3fd_features
+S3FD_RESIZE = 256
+IMAGE_LOSS = child_adult_loss  #gaussian_kl_divergence
 
 CLASSES = torch.cuda.FloatTensor([range(0, 101)]).t()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -28,51 +30,54 @@ REPICKLE = True
 DEBUG = False
 
 LOG_NAME = 'age_train'
-EXPERIMENT_NAME = 'gaussian_kl_div'
+EXPERIMENT_NAME = 's3fd_features'
 OPTIM = 'adam'
 WEIGHTS = {
     'none': '',
-    's3fd': '/home/research/jrondeau/research/risp-prototype/engine/face_detection/sfd/data/s3fd_convert.pth',
-    's3fd_aux': '/home/research/jrondeau/research/facial_analysis/runs/Jan26_06-05-31_debugging/debugging.pth'
+    's3fd': 'models/s3fd/s3fd_convert.pth',
+    's3fd_aux': 'models/s3fd_aux/debugging.pth',
+    'exp': 'runs/Mar03_01-07-02_s3fd_features/s3fd_features.pth',
+    's3fd_new': 'models/Mar02_16-10-21_s3fd_features/s3fd_features.pth'
 }
 
 FRAMES_PER_VID = 8
-EPOCHS = 10
-BATCH_SIZE = 16
+EPOCHS = 1
+BATCH_SIZE = 128
 
-ADAM_PARAMS = {'lr': 3e-5,
-               'weight_decay': 1e-5, 'betas': (0.9, 0.999)}
-SGD_PARAMS = {'lr': 1e-3, 'weight_decay': 1e-5, 'momentum': 0.9, 'nesterov': True}
+ADAM_PARAMS = {'lr': 0, 'weight_decay': 0, 'betas': (0.9, 0.999)}
+SGD_PARAMS  = {'lr': 1e-3, 'weight_decay': 1e-5, 'momentum': 0.9, 'nesterov': True}
+
 MODEL_PARAMS = {
-    'imagenet': True,
-    'freeze_features': False,
-    'base_weights': WEIGHTS['none'],
-    #'aux_weights': WEIGHTS['s3fd_aux'],
-    'drop_rate': 0.20,
-    'num_classes': 2,
+    #'imagenet': True,
+    #'freeze_features': False,
+    'base_weights': WEIGHTS['s3fd'],
+    'aux_weights': WEIGHTS['exp'],
+    'drop_rate': 0,
+    #'num_classes': 2,
 }
 
 SCHEDULER_PARAMS = {'factor': 0.50, 'patience': 10, 'threshold': 1e-2, 'verbose': True}
 DATASET_PARAMS = {
-    'train': {'appa_real': 128, 'adience': 0, 'imdb': 0, 'dir': 0,
-              'root_dir': [],
-              #            '/mnt/fastdata/datasets/age-crawler/organized_google2/child/',
-              #            '/mnt/fastdata/datasets/age-crawler/labelled_flickr/',
-              #            ],
-              'txt': [],
-              #'txt': ['/mnt/fastdata/datasets/imdb/imdb_adults.txt',
-              #        '/mnt/fastdata/datasets/imdb/imdb_children.txt']
+    'train': {'appa_real': 0, 'adience': 128, 'imdb': 0, 'dir': 1,
+              'root_dir': [
+                          #'/mnt/fastdata/datasets/age-crawler/organized_google2/child/',
+                          #'datasets/labelled_flickr/',
+                          #'datasets/challenging-binary-age/',
+                          ],
+              # 'txt': [],
+              'txt': []  #['datasets/imdb/imdb/imdb_adults.txt',
+                         #'datasets/imdb/imdb/imdb_children.txt']
               },
 
-    'val': {'appa_real': 128, 'adience': 0, 'imdb': 0, 'ptrain': 1, 'dir': 0,
+    'val': {'appa_real': 0, 'adience': 0, 'imdb': 0, 'ptrain': 1, 'dir': 1,
             #'root_dir': ['/mnt/data/playground/YouTubeFaces/YouTubeFaces/frame_images_DB/']
             #'root_dir': ['/mnt/data/playground/redlight/images/train/nsfw/']
-            #'root_dir': ['/mnt/fastdata/datasets/redlight/redlight-images/SNF/']
-            #'root_dir': ['datasets/challenging-binary-age/child/']
-            'root_dir': []
+            'root_dir': ['datasets/nsfw/redlight-images/']
+            #'root_dir': ['datasets/challenging-binary-age/']
+            #'root_dir': ['datasets/labelled_flickr/']
             },
 
-    'test': {'appa_real': 128, 'adience': 0, 'imdb': 0, 'dir': 0,
+    'test': {'appa_real': 0, 'adience': 128, 'imdb': 0, 'dir': 0,
              'root_dir': ['/mnt/fastdata/datasets/age-crawler/labelled_flickr/']},
     'video': 0
 }

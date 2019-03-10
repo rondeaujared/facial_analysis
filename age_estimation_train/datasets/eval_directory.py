@@ -1,7 +1,7 @@
 import torch.utils.data as data
 from torchvision.datasets.folder import default_loader
 
-from face_detection.sfd.src.test import find_faces
+from face_detection.sfd.src.test import find_faces_fast
 from settings import *
 from ..training.preprocessing import ImdbTransformer
 
@@ -16,7 +16,7 @@ class EvalDirectory(data.Dataset):
         self.labels = []
         if cache is None:
             print(f"Empty cache; finding faces")
-            self.data = find_faces(self.root, self.logger, display=False)
+            self.data = find_faces_fast(self.root, self.logger, batch_size=settings.BATCH_SIZE, display=False)
         else:
             self.data = cache
 

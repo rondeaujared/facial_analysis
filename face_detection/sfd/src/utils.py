@@ -84,7 +84,8 @@ class EvalDirectory(data.Dataset):
                 'adult': -1,
             }
 
-            p = p.replace('imdb', 'imdb/')
+            # p = p.replace('imdb', 'imdb/')
+            p = p.replace('/mnt/fastdata/datasets/imdb', 'datasets/imdb/imdb/')
             label['path'] = p
             label['adult'] = l
 

@@ -10,7 +10,7 @@ import torch
 from torchvision.datasets.folder import default_loader
 
 from . import utils
-from ..training.preprocessing import ImdbTransformer
+from ..training.preprocessing import ImdbTransformer, S3fdTransformer
 
 BASE_DIR = 'datasets/appa-real/appa-real-release/'
 LOG_NAME = 'age_train'
@@ -92,7 +92,7 @@ class AppaRealDataset(data.Dataset):
             target = {
                 'label': label,
                 'app_age': float(val.mean()),
-                'app_age_std': float(np.std(val)),
+                #'app_age_std': float(np.std(val)),
                 'path': path,
                 'real_age': float(bio_age[k]),
                 'group': group,

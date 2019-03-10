@@ -15,7 +15,7 @@ class s3fd_features(s3fd):
     conv6_2  256 100    0.29
     conv7_2  512 25     0.07
     """
-    def __init__(self, base_weights, drop_rate, aux_weights=None):
+    def __init__(self, base_weights, drop_rate=0, aux_weights=None):
         super(s3fd_features, self).__init__()
         self.weights = base_weights
         self.load_weights()
@@ -26,8 +26,9 @@ class s3fd_features(s3fd):
         self.conv7_2_adult = nn.Conv2d(256, 128//2, kernel_size=3, stride=1, padding=1)
         self.conv_adult    = nn.Conv2d(1152//2, 576//2, kernel_size=3, stride=1, padding=1)
         # self.binary1       = nn.Linear(4712, 512)
-        self.binary1 = nn.Linear(5184//2, 2)
-        #self.binary2       = nn.Linear(1024, 2)
+        # self.binary1 = nn.Linear(5184//2, 2)
+        self.binary1 = nn.Linear(288, 2)
+        # self.binary2       = nn.Linear(1024, 2)
 
         if aux_weights:
             print(f"Loading aux_weights {aux_weights}")
@@ -43,8 +44,8 @@ class s3fd_features(s3fd):
             param.requires_grad = False
 
         #todo = [self.conv5_3_adult, self.fc7_adult, self.conv6_2_adult, self.conv7_2_adult, self.binary1, self.binary2]
-        todo = [self.conv5_3_adult, self.fc7_adult, self.conv6_2_adult, self.conv7_2_adult, self.conv_adult,
-                self.binary1]#, self.binary2]
+        todo = [self.conv5_3_adult, self.fc7_adult, self.conv6_2_adult, self.conv7_2_adult, self.conv_adult, self.binary1]  #, self.binary2]
+
         for layer in todo:
             for param in layer.parameters():
                 param.requires_grad = True

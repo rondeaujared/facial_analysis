@@ -64,12 +64,14 @@ class S3fdTransformer(object):
     def __init__(self, static):
         self.static = static
         self.S3FD = True
+        from settings import S3FD_RESIZE
+        self.big_side = S3FD_RESIZE
 
     def __call__(self, path):
         img = cv2.imread(path)
         if img is None:
             self.logger.warning(f"Image opened as none! {path}")
-        img = self.image_resize(img, static=self.static)
+        img = self.image_resize(img, big_side=self.big_side, static=self.static)
 
         if img is None or img.shape[0] > 4000 or img.shape[1] > 4000:
             self.logger.warning(f"Image too large: {img.shape}; ignoring")
